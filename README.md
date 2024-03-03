@@ -1,5 +1,7 @@
 # Client Server Chat Room
 
+####Note: This chat room is still in progress, the current implementation of the file transfering is entirely symbolic.
+
 ## Description
 - This is a client server text chatroom.
 - The chat room allows for a few different basic commands, one of which is /whisper, which allows a user to direct message another user by username in the chat room.
@@ -11,7 +13,7 @@
 - The program(both client and server) must be run on a Windows version that supports the Winsock api.
 - Ensure you have a C++ compiler installed, such as [GCC](https://gcc.gnu.org/) or [Clang](https://clang.llvm.org/), or an IDE that supports C++ such as [Visual Studio](https://visualstudio.microsoft.com/).
 
- ### Compiling the Game
+ ### Compiling the Program
 - Clone the repository to your local machine or download the source files.
 - Open the Command Prompt or terminal window in the directory where the source files are located.
 - Use the C++ compiler to compile the source code. For example, with GCC, the command would be: g++ -o ServerChatApp server.cpp -std=c++11
