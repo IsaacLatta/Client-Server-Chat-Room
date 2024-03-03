@@ -91,7 +91,7 @@ public:
 		cv.notify_one();
 	}
 	
-	// Adds task to queue with one parameter
+	// Adds task to queue with two parameters
 	template <typename Func, typename Arg1, typename Arg2>
 	void pushTask(Func&& func, Arg1&& arg1, Arg2&& arg2)
 	{
@@ -112,7 +112,8 @@ public:
 		cv.notify_one();
 	}
 
-	// Adds task to queue with two parameters
+	
+	// Adds task to queue with one parameter
 	template <typename Func, typename Arg1>
 	void pushTask(Func&& func, Arg1&& arg1)
 	{
