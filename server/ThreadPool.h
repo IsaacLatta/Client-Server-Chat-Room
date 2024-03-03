@@ -82,7 +82,7 @@ public:
 		return !tasks.empty();
 	}
 
-	// Add task to queue with no parameters
+	// Adds task to queue with one parameter
 	template <typename Func>
 	void pushTask(Func&& func)
 	{
@@ -93,7 +93,7 @@ public:
 		cv.notify_one();
 	}
 	
-	// Adds task to queue with one parameter
+	// Add task to queue with no parameters
 	template <typename Func, typename Arg1, typename Arg2>
 	void pushTask(Func&& func, Arg1&& arg1, Arg2&& arg2)
 	{
