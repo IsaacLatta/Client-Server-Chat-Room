@@ -1,0 +1,299 @@
+#ifndef CLIENTCHATROOM_H
+#define CLIENTCHATROOM_H
+
+#include "ThreadPool.h"
+#include "Client.h"
+
+class ClientChatRoom
+{
+private:
+
+	Client client;
+
+	std::string uploadFile;
+
+	std::mutex shutdownMutex;
+	std::mutex transfer_mutex;
+	std::mutex transfer_complete_mutex;
+	std::mutex upload_file_mutex;
+
+	std::atomic <bool> shouldQuit = false;
+	std::atomic <bool> fileTransfer = false;
+	std::atomic <bool> transferComplete = false;
+	std::atomic <bool> decided = false;
+
+	std::condition_variable shutdownCondition;
+	std::condition_variable transfer_condition;
+	std::condition_variable transfer_complete_condition;
+
+	ThreadPool threadPool;
+
+	void signalShutdown()
+	{
+		shouldQuit = true;
+		shutdownCondition.notify_one();
+	}
+
+	void setUploadFileName(std::string fileName)
+	{
+		std::lock_guard <std::mutex> lock(upload_file_mutex);
+		uploadFile = fileName;
+	}
+
+	std::string getUploadFileName()
+	{
+		std::lock_guard <std::mutex> lock(upload_file_mutex);
+		return uploadFile;
+	}
+
+	// message: /sys cmd, ex.) /sys cls
+	void systemCMD(std::string& message)
+	{
+		int pos = message.find(' ');
+		std::string cmd = message.substr(pos + 1, message.size() - 1);
+		std::cout << "\n";
+		system(cmd.c_str());
+		std::cout << "\n> ";
+	}
+
+	// Handles outgoing messages
+	void handleOutgoingMessage(std::string& message)
+	{
+		try
+		{
+			if (message.find("/quit") != std::string::npos)
+			{
+				client.sendMessage(message);
+				signalShutdown();
+				return;
+			}
+			if (message.find("/sys") != std::string::npos)
+			{
+				systemCMD(message);
+			}
+			if (message.find("/upload") != std::string::npos)
+			{
+				client.sendMessage(message);
+				send_fileTransfer(message);
+			}
+			else
+				client.sendMessage(message);
+		}
+		catch (std::exception& e)
+		{
+			if (shouldQuit)
+				return;
+			else
+				util::print(e.what());
+		}
+	}
+
+	void send_fileTransfer(std::string& message)
+	{
+		std::unique_lock <std::mutex> lock(transfer_mutex);
+
+		fileTransfer = true;
+		setUploadFileName(util::getMessage(message));
+		transfer_condition.wait(lock, [this] {return decided.load(); }); // Wait for transfer to complete
+		decided = false;
+
+		if (fileTransfer)
+		{
+			client.uploadFile(getUploadFileName());
+			fileTransfer = false;
+		}
+		
+		transferComplete = true;
+		transfer_complete_condition.notify_one();
+	}
+
+	void receive_fileTransfer(const std::string& message)
+	{
+		std::unique_lock <std::mutex> lock(transfer_mutex);
+
+		util::print(message);
+		fileTransfer = true;
+		transfer_condition.wait(lock, [this] {return decided.load(); }); // Wait for decision
+		decided = false;
+
+		if (fileTransfer) // Transfer approved
+		{
+			std::string response = "$Yes";
+			client.sendMessage(response);
+			client.downloadFile();
+		}
+		else 
+		{
+			std::string response = "$No";
+			client.sendMessage(response);
+		}
+
+		// Unblock sendMessageLoop
+		transferComplete = true;
+		transfer_complete_condition.notify_one();
+	}
+
+	// Handles incoming messages
+	void handleIncomingMessage(const std::string& message)
+	{
+		if (shouldQuit) // Connection closed for other reason
+			return;
+		if (message.find("/end") != std::string::npos) // Host closed server
+		{
+			util::print("[!] Server has been Closed!");
+			signalShutdown();
+			return;
+		}
+		if (message.find("File Transfer Request:") != std::string::npos)
+		{
+			receive_fileTransfer(message);
+			return;
+		}
+		if (fileTransfer && message.find("[-] Transfer Denied"))
+		{
+			
+		}
+		else
+			util::print(message);
+	}
+
+	// Receive chats
+	void recvMessageLoop()
+	{
+		try
+		{
+			std::string message;
+			while (!shouldQuit)
+			{
+				message = client.recvMessage();
+				if (fileTransfer)
+				{
+					std::unique_lock <std::mutex> lock(transfer_complete_mutex);
+					util::print(message);
+					if (message.find("[+] Transfer Approved") != std::string::npos)
+					{
+						decided = true;
+						fileTransfer = true;
+						transfer_condition.notify_one();
+						transfer_complete_condition.wait(lock, [this] { return transferComplete.load(); }); // wait till transfer is complete
+						transferComplete = false;
+					}
+					else
+					{
+						decided = true;
+						fileTransfer = false;
+						transfer_condition.notify_one();
+						transfer_complete_condition.wait(lock, [this] { return transferComplete.load(); }); // wait till transfer is complete
+						transferComplete = false;
+					}
+					continue;
+				}
+				
+				handleIncomingMessage(message);
+			}
+		}
+		catch (std::exception& e)
+		{
+			if (shouldQuit)
+				return;
+			std::cerr << e.what() << std::endl;
+		}
+	}
+
+	// Sends chats to server
+	void sendMessageLoop()
+	{
+		std::string message = " ";
+		std::cout << "> ";
+		while (!shouldQuit)
+		{
+			std::getline(std::cin, message); // When connection closed from server side getline will require a key press to close.
+			std::cout << "> ";
+			
+			if (fileTransfer)
+			{
+				decided = true;
+				if (message.find("y") != std::string::npos) // Transfer approved
+				{
+					transfer_condition.notify_one();
+					
+					// Wait until transfer complete
+					std::unique_lock <std::mutex> lock(transfer_complete_mutex);
+					transfer_complete_condition.wait(lock, [this] { return transferComplete.load(); });
+				}
+				else
+				{
+					
+					fileTransfer = false;
+					transfer_condition.notify_one();
+
+				}
+
+				// Reset transfer flags
+				transferComplete = false;
+				fileTransfer = false;
+				continue;
+			}
+			
+			handleOutgoingMessage(message);
+		}
+		std::cout << "\033[2K\r"; // Remove "> " from terminal
+	}
+
+	void login()
+	{
+		std::string server_ip = "10.50.170.173"; // Tru Wifi
+		//std::string server_ip = "192.168.1.75"; // Home wifi
+		std::string username = "</User> ";
+		/*
+		while (true)
+		{
+			std::cout << "[*] Enter Username: ";
+			std::cin >> username;
+			if (username == "HOST")
+			{
+				std::cout << "[!] Invalid Username" << std::endl;
+				continue;
+			}
+			username = "</" + username + "> ";
+			client.setUsername(username);
+			break;
+		}
+
+		std::cout << "[*] Enter Servers IP: ";
+		std::cin >> server_ip;
+		*/
+		std::cout << "[+] Connecting to server ...\n";
+		client.setUsername(username);
+		client.initializeClient();
+		client.connectToServer(server_ip);
+		std::cout << "[+] Connected to Server!\n";
+		
+		client.sendMessage(""); // Send the username
+	}
+
+public:
+
+	void run_chat_room()
+	{
+		try
+		{
+			std::unique_lock <std::mutex> lock(shutdownMutex);
+			login();
+
+			threadPool.pushTask(&ClientChatRoom::sendMessageLoop, this);
+			threadPool.pushTask(&ClientChatRoom::recvMessageLoop, this);
+
+			// Client
+			shutdownCondition.wait(lock, [this] { return this->shouldQuit.load(); });
+			client.closeClient();
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			std::cerr << "[-] Error: " << WSAGetLastError() << std::endl;
+		}
+	}
+};
+#endif
+
