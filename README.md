@@ -27,4 +27,4 @@
 
 ## Troubleshooting
 - If you encounter issues with network connectivity, ensure that the correct port is open and not blocked by your firewall.
-- The client and server programs have port 50000 hardcoded to listen and connect on, this can be changed in their respective cpp files.
+- The client and server programs have port 50000 hardcoded to listen and connect on, this can be changed in their respective .h files.
