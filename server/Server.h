@@ -95,7 +95,10 @@ private:
 
 			res = send(receiver, reinterpret_cast<char*>(&netFileSize), sizeof(netFileSize), 0);
 			if (res == SOCKET_ERROR)
+			{
+				delete[] buffer;
 				throw std::runtime_error("[-] Failed to send file size");
+			}
 
 			size_t bytesSent = 0;
 			size_t bytesLeft = fileSize;
