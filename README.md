@@ -1,6 +1,6 @@
 # Client Server Chat Room
 
-### Note: This chat room is still in progress, the current implementation of file transfering is entirely symbolic.
+### Note: This chat room is still in progress, this application is in need of a communication protocol and more robost error handling
 
 ## Description
 - This is a client server text chatroom.
