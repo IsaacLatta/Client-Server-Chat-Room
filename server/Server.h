@@ -201,6 +201,7 @@ private:
 			}
 			else
 			{
+				delete[] buffer;
 				throw std::runtime_error("[-] File Failed to open");
 			}
 			str = "[+] Saved";
