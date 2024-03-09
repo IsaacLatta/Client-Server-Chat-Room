@@ -92,7 +92,7 @@ private:
 			}
 
 			// File contents now in buffer, forward to the receiver
-
+			// Send the file size
 			res = send(receiver, reinterpret_cast<char*>(&netFileSize), sizeof(netFileSize), 0);
 			if (res == SOCKET_ERROR)
 			{
@@ -100,11 +100,12 @@ private:
 				throw std::runtime_error("[-] Failed to send file size");
 			}
 
+			// Send the file contents
 			size_t bytesSent = 0;
 			size_t bytesLeft = fileSize;
 			while (bytesLeft > 0)
 			{
-				res = send(receiver, buffer + bytesSent, bytesLeft, 0); // Send the file contents to the server
+				res = send(receiver, buffer + bytesSent, bytesLeft, 0); 
 				if (res == SOCKET_ERROR)
 				{
 					delete[] buffer;
