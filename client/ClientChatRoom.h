@@ -250,15 +250,12 @@ private:
 		std::cout << "\033[2K\r"; // Remove "> " from terminal
 	}
 
-
-	void login()
+void login()
 	{
-		//std::string server_ip = "10.50.170.173"; // Tru wifi
-		std::string server_ip = "192.168.1.75"; // Home wifi
-		std::string username, response;
+		std::string server_ip, username, response;
 		
-		//std::cout << "[*] Enter Servers IP: ";
-		//std::cin >> server_ip;
+		std::cout << "[*] Enter Servers IP: ";
+		std::cin >> server_ip;
 
 		std::cout << "[+] Connecting to server ...\n";
 		client.initializeClient();
@@ -284,7 +281,6 @@ private:
 			}
 		}
 	}
-
 public:
 
 	void run_chat_room()
