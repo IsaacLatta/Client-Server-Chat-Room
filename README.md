@@ -1,10 +1,11 @@
 # Client Server Chat Room
 
-### Note: This chat room is still in progress, this application is in need of a communication protocol and more robost error handling
+### Note: This chat room is still in progress, this application is in need of a communication protocol and more robost error handling.
 
 ## Description
 - This is a client server text chatroom.
 - The chat room allows for a few different basic commands, one of which is /whisper, which allows a user to direct message another user by username in the chat room.
+- Additionnally files may be shared with the /upload command.
 - The command: /commands, may be used by either the client or the server to list all available commands
   
 ## Installation
