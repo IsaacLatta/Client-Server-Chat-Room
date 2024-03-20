@@ -1,9 +1,7 @@
 # Client Server Chat Room
 
-### Note: This chat room is still in progress, this application is in need of a communication protocol and more robost error handling.
-
 ## Description
-- This is a client server text chatroom.
+- This is a client server text and  peer to peer file sharing chatroom.
 - The chat room allows for a few different basic commands, one of which is /whisper, which allows a user to direct message another user by username in the chat room.
 - Additionnally files may be shared with the /upload command.
 - The command: /commands, may be used by either the client or the server to list all available commands
@@ -28,4 +26,4 @@
 
 ## Troubleshooting
 - If you encounter issues with network connectivity, ensure that the correct port is open and not blocked by your firewall.
-- The client and server programs have port 50000 hardcoded to listen and connect on, this can be changed in their respective .h files.
+- The client and server programs have port 50000 and 51000 hardcoded to listen and connect on for both the messaging and file sharing, this can be changed in their respective .h files.
