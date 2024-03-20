@@ -265,12 +265,11 @@ private:
 
 	void login()
 	{
-		std::string server_ip = "10.50.170.173"; // Tru wifi
-		//std::string server_ip = "192.168.1.73"; // Home wifi
+		std::string server_ip = ""; 
 		std::string username, response;
 		
-		//std::cout << "[*] Enter Servers IP: ";
-		//std::cin >> server_ip;
+		std::cout << "[*] Enter Servers IP: ";
+		std::cin >> server_ip;
 
 		std::cout << "[+] Connecting to server ...\n";
 		client.initializeClient();
