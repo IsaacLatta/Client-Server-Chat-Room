@@ -295,6 +295,10 @@ private:
 			
 			std::getline(std::cin, message);
 			std::cout << "> ";
+			if (message.empty())
+			{
+				continue;
+			}
 			
 			if (user->inFileTransfer())
 			{
