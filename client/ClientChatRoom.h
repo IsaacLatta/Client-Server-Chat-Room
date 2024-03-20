@@ -234,6 +234,11 @@ private:
 		{
 			std::getline(std::cin, message); // When connection closed from server side getline will require a key press to close.
 			std::cout << "> ";
+
+			if (message.empty())
+			{
+				continue;
+			}
 			
 			if (fileTransfer)
 			{
